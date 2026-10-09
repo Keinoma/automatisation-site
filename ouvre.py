@@ -1,3 +1,4 @@
+import os
 import re
 from playwright.sync_api import Playwright, sync_playwright, expect
 
@@ -21,6 +22,9 @@ def clic_visible(page, x, y, duree_ms=1500):
     }""", [x, y, duree_ms])
     page.mouse.click(x, y)
 
+def est_saisie(page):
+    return page.evaluate("""() => {const el = document.activeElement; return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable; }""")
+    
 
 def run(playwright: Playwright) -> None:
 
@@ -30,29 +34,24 @@ def run(playwright: Playwright) -> None:
 
     page = context.new_page()
     page.goto("https://www.wiki-masters.com/login")
+    page.wait_for_timeout(1000)
 
-    est_saisie = page.evaluate("""() => {const el = document.activeElement; return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable; }""")
-    
-    for i in range(600, 200, -30):
-        clic_visible(page, 546, i)
-        if est_saisie : 
-            break
-        else:
-            print('cliqué à y: ', i)
+   
+    while not est_saisie(page):
+        clic_visible(page, 546, 240)
         page.wait_for_timeout(800)
+    page.keyboard.type("gontranductible@gmail.com", delay=100)
+    page.wait_for_timeout(500)    
 
-    page.keyboard.type("gon", delay=100)
-    page.keyboard.type("tra", delay=100) 
-    page.keyboard.type("nd", delay=100)  
-    page.keyboard.type("TRAND", delay=2000)
+
+    clic_visible(page, 540, 350)
+    while not est_saisie(page):
+        clic_visible(page, 540, 350)
+        page.wait_for_timeout(800)
+    page.keyboard.type(os.environ["WIKI_PASSWORD"], delay=100)
 
     
-    page.wait_for_timeout(2000)
-    page.mouse.click(19, 32)
-
-
-
-
+    
     
     #context.tracing.stop(path="trace.zip")
     context.storage_state(path="auth.json")
